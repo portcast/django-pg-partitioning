@@ -21,7 +21,7 @@ class TimeRangePartitioning(_PartitioningBase):
     """Use this decorator to declare the database table corresponding to the model to be partitioned by time range.
 
     Parameters:
-      partition_key(str): Partition field name of DateTimeField.
+      partition_key(str): Partition field name of DateField or DateTimeField.
       options: Currently supports the following keyword parameters:
 
         - default_period(PeriodType): Default partition period.
@@ -46,8 +46,9 @@ class TimeRangePartitioning(_PartitioningBase):
 
     def __call__(self, model: Type[models.Model]):
         super().__call__(model)
-        if model._meta.get_field(self.partition_key).get_internal_type() != models.DateTimeField().get_internal_type():
-            raise ValueError("The partition_key must be DateTimeField type.")
+        support_field_types = [item.get_internal_type() for item in [models.DateField(), models.DateTimeField()]]
+        if model._meta.get_field(self.partition_key).get_internal_type() not in support_field_types:
+            raise ValueError("The partition_key must be of DateField or DateTimeField type.")
         model.partitioning = TimeRangePartitionManager(model, self.partition_key, self.options)
         return model
 
